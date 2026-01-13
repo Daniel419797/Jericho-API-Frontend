@@ -29,6 +29,83 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
   const [uploads, setUploads] = useState<FileUploadProgress[]>([]);
   const toast = useToast();
 
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      const newUploads: FileUploadProgress[] = files.map((file) => ({
+        file,
+        progress: 0,
+        status: 'pending' as const,
+      }));
+
+      setUploads((prev) => [...prev, ...newUploads]);
+
+      // Use the callback to get the current uploads array
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        try {
+          // Use functional state update to avoid stale closure
+          setUploads((prev) => {
+            const uploadIndex = prev.findIndex((u) => u.file === file);
+            if (uploadIndex === -1) return prev;
+            const updated = [...prev];
+            updated[uploadIndex] = { ...updated[uploadIndex], status: 'uploading' as const };
+            return updated;
+          });
+
+          await apiClient.uploadFile(file, projectId, (progress) => {
+            setUploads((prev) => {
+              const uploadIndex = prev.findIndex((u) => u.file === file);
+              if (uploadIndex === -1) return prev;
+              const updated = [...prev];
+              updated[uploadIndex] = { ...updated[uploadIndex], progress };
+              return updated;
+            });
+          });
+
+          setUploads((prev) => {
+            const uploadIndex = prev.findIndex((u) => u.file === file);
+            if (uploadIndex === -1) return prev;
+            const updated = [...prev];
+            updated[uploadIndex] = { ...updated[uploadIndex], status: 'completed' as const, progress: 100 };
+            return updated;
+          });
+
+          toast({
+            title: 'Upload complete',
+            description: `${file.name} uploaded successfully`,
+            status: 'success',
+            duration: 3000,
+          });
+        } catch (error) {
+          setUploads((prev) => {
+            const uploadIndex = prev.findIndex((u) => u.file === file);
+            if (uploadIndex === -1) return prev;
+            const updated = [...prev];
+            updated[uploadIndex] = {
+              ...updated[uploadIndex],
+              status: 'error' as const,
+              error: error instanceof Error ? error.message : 'Upload failed',
+            };
+            return updated;
+          });
+
+          toast({
+            title: 'Upload failed',
+            description: `Failed to upload ${file.name}`,
+            status: 'error',
+            duration: 5000,
+          });
+        }
+      }
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    },
+    [projectId, onUploadComplete, toast]
+  );
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -47,7 +124,7 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
       const files = Array.from(e.dataTransfer.files);
       handleFiles(files);
     },
-    [projectId]
+    [handleFiles]
   );
 
   const handleFileSelect = useCallback(
@@ -57,73 +134,8 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
       // Reset input
       e.target.value = '';
     },
-    [projectId]
+    [handleFiles]
   );
-
-  const handleFiles = async (files: File[]) => {
-    const newUploads: FileUploadProgress[] = files.map((file) => ({
-      file,
-      progress: 0,
-      status: 'pending' as const,
-    }));
-
-    setUploads((prev) => [...prev, ...newUploads]);
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const uploadIndex = uploads.length + i;
-
-      try {
-        setUploads((prev) =>
-          prev.map((upload, idx) =>
-            idx === uploadIndex ? { ...upload, status: 'uploading' as const } : upload
-          )
-        );
-
-        await apiClient.uploadFile(file, projectId, (progress) => {
-          setUploads((prev) =>
-            prev.map((upload, idx) => (idx === uploadIndex ? { ...upload, progress } : upload))
-          );
-        });
-
-        setUploads((prev) =>
-          prev.map((upload, idx) =>
-            idx === uploadIndex ? { ...upload, status: 'completed' as const, progress: 100 } : upload
-          )
-        );
-
-        toast({
-          title: 'Upload complete',
-          description: `${file.name} uploaded successfully`,
-          status: 'success',
-          duration: 3000,
-        });
-      } catch (error) {
-        setUploads((prev) =>
-          prev.map((upload, idx) =>
-            idx === uploadIndex
-              ? {
-                  ...upload,
-                  status: 'error' as const,
-                  error: error instanceof Error ? error.message : 'Upload failed',
-                }
-              : upload
-          )
-        );
-
-        toast({
-          title: 'Upload failed',
-          description: `Failed to upload ${file.name}`,
-          status: 'error',
-          duration: 5000,
-        });
-      }
-    }
-
-    if (onUploadComplete) {
-      onUploadComplete();
-    }
-  };
 
   const removeUpload = (index: number) => {
     setUploads((prev) => prev.filter((_, idx) => idx !== index));

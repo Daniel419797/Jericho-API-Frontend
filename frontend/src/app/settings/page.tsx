@@ -43,7 +43,7 @@ import {
   Code,
 } from '@chakra-ui/react';
 import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -163,12 +163,12 @@ export default function SettingsPage() {
   };
 
   // Set initial values when profile loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setName(profile.name);
       setBio(profile.bio || '');
     }
-  });
+  }, [profile]);
 
   return (
     <ProtectedRoute>
