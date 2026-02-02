@@ -5,6 +5,9 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   ownerId: string;
+  databaseType?: string;
+  databaseConfig?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   memberCount: number;
   fileCount: number;
 }
@@ -44,4 +47,9 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface ProjectResponse {
+  project: Project;
+  apiKey?: string | null; // onboarding key (raw) returned once
 }

@@ -15,11 +15,11 @@ import {
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/auth-context';
+import useAuthStore from '@/stores/authStore';
 import { ColorModeToggle } from './ColorModeToggle';
 
 export function NavBar() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuthStore((s) => ({ isAuthenticated: s.isAuthenticated, user: s.user, logout: s.logout }));
 
   const handleLogout = async () => {
     try {
@@ -73,16 +73,21 @@ export function NavBar() {
                   </HStack>
                 </MenuButton>
                 <MenuList>
-                  <MenuItem as={Link} href="/settings">
+                  <MenuItem as={Link} href="/dashboard/settings">
                     Settings
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </MenuList>
               </Menu>
             ) : (
-              <Button as={Link} href="/auth/login" colorScheme="brand">
-                Login
-              </Button>
+              <HStack spacing={2}>
+                <Link href="/auth/login">
+                  <Button colorScheme="brand">Login</Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button variant="ghost">Register</Button>
+                </Link>
+              </HStack>
             )}
           </HStack>
         </Flex>

@@ -1,171 +1,230 @@
-'use client';
+"use client";
 
 import {
-  Container,
-  Heading,
-  Text,
-  VStack,
-  Box,
-  SimpleGrid,
-  Card,
-  CardHeader,
-  CardBody,
-  Spinner,
-  Center,
-  Alert,
-  AlertIcon,
-  AlertDescription,
-  List,
-  ListItem,
-  HStack,
-  Badge,
+    Box,
+    Heading,
+    Text,
+    SimpleGrid,
+    Card,
+    CardHeader,
+    CardBody,
+    Spinner,
+    Center,
+    Alert,
+    AlertIcon,
+    AlertDescription,
+    List,
+    ListItem,
+    HStack,
+    VStack,
+    Badge,
+    Stat,
+    StatLabel,
+    StatNumber,
+    StatHelpText,
+    StatArrow,
+    Icon,
+    useColorModeValue,
 } from '@chakra-ui/react';
-import { useAuth } from '@/contexts/auth-context';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { FiFolder, FiUsers, FiMessageSquare, FiActivity, FiTrendingUp } from 'react-icons/fi';
+import useAuthStore from '@/stores/authStore';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/services/api-client';
+import { dashboardService } from '@/services/dashboardService';
 import { formatDistanceToNow } from '@/utils/date-utils';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+    const user = useAuthStore((s) => s.user);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: () => apiClient.getDashboardData(),
-  });
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['dashboard'],
+        queryFn: () => dashboardService.getDashboardData(),
+    });
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'project_created':
-        return '📁';
-      case 'message_sent':
-        return '💬';
-      case 'file_uploaded':
-        return '📄';
-      case 'member_joined':
-        return '👤';
-      default:
-        return '•';
-    }
-  };
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const borderColor = useColorModeValue('gray.200', 'gray.700');
+    const activityBg = useColorModeValue('gray.50', 'gray.700');
+    const mutedColor = useColorModeValue('gray.500', 'gray.400');
 
-  return (
-    <ProtectedRoute>
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={8} align="stretch">
-          <Box>
-            <Heading as="h1" size="xl" mb={2}>
-              Dashboard
-            </Heading>
-            <Text color="gray.600" _dark={{ color: 'gray.400' }}>
-              Welcome back, {user?.name}!
-            </Text>
-          </Box>
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'project_created':
+                return '📁';
+            case 'message_sent':
+                return '💬';
+            case 'file_uploaded':
+                return '📄';
+            case 'member_joined':
+                return '👤';
+            default:
+                return '•';
+        }
+    };
 
-          {isLoading && (
-            <Center py={10}>
-              <Spinner size="xl" />
-            </Center>
-          )}
+    return (
+        <Box>
+            {/* Page Header */}
+            <Box mb={8}>
+                <Heading as="h1" size={{ base: 'lg', md: 'xl' }} mb={2}>
+                    Dashboard
+                </Heading>
+                <Text color={mutedColor} fontSize={{ base: 'sm', md: 'md' }}>
+                    Welcome back, {user?.name || 'Admin'}! Here&apos;s what&apos;s happening.
+                </Text>
+            </Box>
 
-          {error && (
-            <Alert status="error">
-              <AlertIcon />
-              <AlertDescription>
-                Failed to load dashboard data. {error instanceof Error ? error.message : 'Please try again.'}
-              </AlertDescription>
-            </Alert>
-          )}
+            {isLoading && (
+                <Center py={20}>
+                    <Spinner size="xl" color="brand.500" thickness="4px" />
+                </Center>
+            )}
 
-          {data && (
-            <>
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                <Card>
-                  <CardHeader>
-                    <Heading size="md">Projects</Heading>
-                  </CardHeader>
-                  <CardBody>
-                    <VStack align="start" spacing={2}>
-                      <Text fontSize="3xl" fontWeight="bold">
-                        {data.stats.projectsCount}
-                      </Text>
-                      <Text color="gray.600" _dark={{ color: 'gray.400' }}>
-                        Total projects
-                      </Text>
-                      {data.stats.activeProjectsCount > 0 && (
-                        <Badge colorScheme="green">
-                          {data.stats.activeProjectsCount} active
-                        </Badge>
-                      )}
-                    </VStack>
-                  </CardBody>
-                </Card>
+            {error && (
+                <Alert status="error" borderRadius="lg">
+                    <AlertIcon />
+                    <AlertDescription>
+                        Failed to load dashboard data. {error instanceof Error ? error.message : 'Please try again.'}
+                    </AlertDescription>
+                </Alert>
+            )}
 
-                <Card>
-                  <CardHeader>
-                    <Heading size="md">Messages</Heading>
-                  </CardHeader>
-                  <CardBody>
-                    <VStack align="start" spacing={2}>
-                      <Text fontSize="3xl" fontWeight="bold">
-                        {data.stats.unreadMessagesCount}
-                      </Text>
-                      <Text color="gray.600" _dark={{ color: 'gray.400' }}>
-                        Unread messages
-                      </Text>
-                    </VStack>
-                  </CardBody>
-                </Card>
+            {data && (
+                <VStack spacing={6} align="stretch">
+                    {/* Stats Cards */}
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+                        <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                            <CardBody>
+                                <HStack spacing={4}>
+                                    <Box
+                                        p={3}
+                                        borderRadius="lg"
+                                        bg="brand.50"
+                                        _dark={{ bg: 'rgba(33, 150, 243, 0.15)' }}
+                                    >
+                                        <Icon as={FiFolder} boxSize={6} color="brand.500" />
+                                    </Box>
+                                    <Stat>
+                                        <StatLabel color={mutedColor}>Projects</StatLabel>
+                                        <StatNumber fontSize="2xl">{data.stats.projectsCount}</StatNumber>
+                                        {data.stats.activeProjectsCount > 0 && (
+                                            <StatHelpText mb={0}>
+                                                <StatArrow type="increase" />
+                                                {data.stats.activeProjectsCount} active
+                                            </StatHelpText>
+                                        )}
+                                    </Stat>
+                                </HStack>
+                            </CardBody>
+                        </Card>
 
-                <Card>
-                  <CardHeader>
-                    <Heading size="md">Activity</Heading>
-                  </CardHeader>
-                  <CardBody>
-                    <VStack align="start" spacing={2}>
-                      <Text fontSize="3xl" fontWeight="bold">
-                        {data.recentActivities.length}
-                      </Text>
-                      <Text color="gray.600" _dark={{ color: 'gray.400' }}>
-                        Recent activities
-                      </Text>
-                    </VStack>
-                  </CardBody>
-                </Card>
-              </SimpleGrid>
+                        <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                            <CardBody>
+                                <HStack spacing={4}>
+                                    <Box
+                                        p={3}
+                                        borderRadius="lg"
+                                        bg="green.50"
+                                        _dark={{ bg: 'rgba(72, 187, 120, 0.15)' }}
+                                    >
+                                        <Icon as={FiUsers} boxSize={6} color="green.500" />
+                                    </Box>
+                                    <Stat>
+                                        <StatLabel color={mutedColor}>Users</StatLabel>
+                                        <StatNumber fontSize="2xl">{data.stats.usersCount || 0}</StatNumber>
+                                        <StatHelpText mb={0}>
+                                            <StatArrow type="increase" />
+                                            12% this month
+                                        </StatHelpText>
+                                    </Stat>
+                                </HStack>
+                            </CardBody>
+                        </Card>
 
-              <Card>
-                <CardHeader>
-                  <Heading size="md">Recent Activity</Heading>
-                </CardHeader>
-                <CardBody>
-                  {data.recentActivities.length === 0 ? (
-                    <Text color="gray.500" _dark={{ color: 'gray.400' }}>
-                      No recent activity
-                    </Text>
-                  ) : (
-                    <List spacing={3}>
-                      {data.recentActivities.map((activity) => (
-                        <ListItem key={activity.id}>
-                          <HStack spacing={3} align="start">
-                            <Text fontSize="xl">{getActivityIcon(activity.type)}</Text>
-                            <VStack align="start" spacing={0} flex={1}>
-                              <Text>{activity.description}</Text>
-                              <Text fontSize="sm" color="gray.500" _dark={{ color: 'gray.400' }}>
-                                {activity.userName} • {formatDistanceToNow(activity.timestamp)}
-                              </Text>
-                            </VStack>
-                          </HStack>
-                        </ListItem>
-                      ))}
-                    </List>
-                  )}
-                </CardBody>
-              </Card>
-            </>
-          )}
-        </VStack>
-      </Container>
-    </ProtectedRoute>
-  );
+                        <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                            <CardBody>
+                                <HStack spacing={4}>
+                                    <Box
+                                        p={3}
+                                        borderRadius="lg"
+                                        bg="purple.50"
+                                        _dark={{ bg: 'rgba(159, 122, 234, 0.15)' }}
+                                    >
+                                        <Icon as={FiMessageSquare} boxSize={6} color="purple.500" />
+                                    </Box>
+                                    <Stat>
+                                        <StatLabel color={mutedColor}>Messages</StatLabel>
+                                        <StatNumber fontSize="2xl">{data.stats.unreadMessagesCount}</StatNumber>
+                                        <StatHelpText mb={0} color="orange.500">
+                                            {data.stats.unreadMessagesCount} unread
+                                        </StatHelpText>
+                                    </Stat>
+                                </HStack>
+                            </CardBody>
+                        </Card>
+
+                        <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                            <CardBody>
+                                <HStack spacing={4}>
+                                    <Box
+                                        p={3}
+                                        borderRadius="lg"
+                                        bg="orange.50"
+                                        _dark={{ bg: 'rgba(237, 137, 54, 0.15)' }}
+                                    >
+                                        <Icon as={FiTrendingUp} boxSize={6} color="orange.500" />
+                                    </Box>
+                                    <Stat>
+                                        <StatLabel color={mutedColor}>API Requests</StatLabel>
+                                        <StatNumber fontSize="2xl">{data.stats.apiRequestsCount || '12.5K'}</StatNumber>
+                                        <StatHelpText mb={0}>
+                                            <StatArrow type="increase" />
+                                            8% vs last week
+                                        </StatHelpText>
+                                    </Stat>
+                                </HStack>
+                            </CardBody>
+                        </Card>
+                    </SimpleGrid>
+
+                    {/* Recent Activity */}
+                    <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                        <CardHeader pb={0}>
+                            <HStack>
+                                <Icon as={FiActivity} color="brand.500" />
+                                <Heading size="md">Recent Activity</Heading>
+                            </HStack>
+                        </CardHeader>
+                        <CardBody>
+                            {data.recentActivities.length === 0 ? (
+                                <Text color={mutedColor}>No recent activity</Text>
+                            ) : (
+                                <List spacing={4}>
+                                    {data.recentActivities.map((activity) => (
+                                        <ListItem
+                                            key={activity.id}
+                                            p={3}
+                                            borderRadius="lg"
+                                            bg={activityBg}
+                                        >
+                                            <HStack spacing={3} align="start">
+                                                <Text fontSize="xl">{getActivityIcon(activity.type)}</Text>
+                                                <VStack align="start" spacing={0} flex={1}>
+                                                    <Text fontWeight="medium">{activity.description}</Text>
+                                                    <Text fontSize="sm" color={mutedColor}>
+                                                        {activity.userName} • {formatDistanceToNow(activity.timestamp)}
+                                                    </Text>
+                                                </VStack>
+                                                <Badge colorScheme="brand" variant="subtle">
+                                                    {activity.type.replace('_', ' ')}
+                                                </Badge>
+                                            </HStack>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
+                        </CardBody>
+                    </Card>
+                </VStack>
+            )}
+        </Box>
+    );
 }

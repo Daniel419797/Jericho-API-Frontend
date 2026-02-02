@@ -15,7 +15,7 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { AttachmentIcon, CloseIcon, CheckIcon } from '@chakra-ui/icons';
-import { apiClient } from '@/services/api-client';
+import { fileService } from '@/services/fileService';
 import { FileUploadProgress } from '@/types/file';
 import { formatFileSize } from '@/utils/file-utils';
 
@@ -53,7 +53,7 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
             return updated;
           });
 
-          await apiClient.uploadFile(file, projectId, (progress) => {
+          await fileService.uploadFile(file, projectId, (progress) => {
             setUploads((prev) => {
               const uploadIndex = prev.findIndex((u) => u.file === file);
               if (uploadIndex === -1) return prev;

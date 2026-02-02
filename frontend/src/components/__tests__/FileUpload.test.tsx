@@ -2,9 +2,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FileUpload } from '../FileUpload';
 import '@testing-library/jest-dom';
 
-// Mock the API client
-jest.mock('@/services/api-client', () => ({
-  apiClient: {
+// Mock the file service
+jest.mock('@/services/fileService', () => ({
+  fileService: {
     uploadFile: jest.fn((file, projectId, onProgress) => {
       // Simulate progress
       if (onProgress) {

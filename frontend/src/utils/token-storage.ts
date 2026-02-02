@@ -14,8 +14,14 @@ export const tokenStorage = {
     return localStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
-  setTokens: (tokens: AuthTokens): void => {
+  setTokens: (tokens: AuthTokens | null | undefined): void => {
     if (typeof window === 'undefined') return;
+    if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
+      // Log for easier debugging and surface a clear error to callers
+      console.error('Invalid tokens provided to tokenStorage.setTokens:', tokens);
+      throw new Error('Invalid auth tokens');
+    }
+
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
   },

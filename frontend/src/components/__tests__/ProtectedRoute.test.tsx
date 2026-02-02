@@ -2,10 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { ProtectedRoute } from '../ProtectedRoute';
 import '@testing-library/jest-dom';
 
-// Mock the auth context
-const mockUseAuth = jest.fn();
-jest.mock('@/contexts/auth-context', () => ({
-  useAuth: () => mockUseAuth(),
+// Mock the zustand auth store
+const mockUseAuthStore = jest.fn();
+jest.mock('@/stores/authStore', () => ({
+  __esModule: true,
+  default: (selector: any) => selector(mockUseAuthStore()),
 }));
 
 // Mock the router
@@ -24,7 +25,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders children when authenticated', () => {
-    mockUseAuth.mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: { id: '1', name: 'John Doe', email: 'john@example.com', role: 'user' },
@@ -40,7 +41,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('shows loading spinner when loading', () => {
-    mockUseAuth.mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
       user: null,
@@ -56,7 +57,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects to login when not authenticated', async () => {
-    mockUseAuth.mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       user: null,
@@ -74,7 +75,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects non-admin users from admin routes', async () => {
-    mockUseAuth.mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: { id: '1', name: 'John Doe', email: 'john@example.com', role: 'user' },
@@ -92,7 +93,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('allows admin users to access admin routes', () => {
-    mockUseAuth.mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'admin' },

@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
 import { Providers } from '@/lib/providers';
 import { ReactQueryProvider } from '@/lib/react-query-provider';
-import { AuthProvider } from '@/contexts/auth-context';
-import { NavBar } from '@/components/NavBar';
-import { Box } from '@chakra-ui/react';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Jericho API Frontend',
-  description: 'Frontend application for Jericho API',
+  title: 'Jericho Admin Dashboard',
+  description: 'Admin dashboard for Jericho API',
 };
 
 export default function RootLayout({
@@ -17,15 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <ReactQueryProvider>
           <Providers>
-            <AuthProvider>
-              <NavBar />
-              <Box as="main" minH="calc(100vh - 64px)">
-                {children}
-              </Box>
-            </AuthProvider>
+            {children}
           </Providers>
         </ReactQueryProvider>
       </body>

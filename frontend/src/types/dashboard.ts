@@ -2,6 +2,8 @@ export interface DashboardStats {
   projectsCount: number;
   unreadMessagesCount: number;
   activeProjectsCount: number;
+  usersCount?: number;
+  apiRequestsCount?: number | string;
 }
 
 export interface RecentActivity {
